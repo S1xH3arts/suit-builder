@@ -1,14 +1,94 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Suit Builder</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GMod Suit Builder</title>
+  <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { background: #111; color: white; font-family: sans-serif; padding: 2rem; }
+    input, textarea, label { display: block; margin: 0.5rem 0; width: 100%; }
+    .checkbox { margin-right: 0.5rem; }
+    .output { background: black; color: lime; padding: 1rem; white-space: pre-wrap; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+
+function SuitBuilder() {
+  const [name, setName] = React.useState("My Suit");
+  const [entity, setEntity] = React.useState("armor_mysuit");
+  const [desc, setDesc] = React.useState("");
+  const [model, setModel] = React.useState("models/player/kleiner.mdl");
+  const [health, setHealth] = React.useState(1000);
+  const [armor, setArmor] = React.useState(500);
+  const [speed, setSpeed] = React.useState(500);
+  const [jump, setJump] = React.useState(300);
+  const [powers, setPowers] = React.useState({
+    Godmode: false,
+    Dash: false,
+    EMP: false,
+    Lifesteal: false
+  });
+
+  const togglePower = (key) => {
+    setPowers({ ...powers, [key]: !powers[key] });
+  };
+
+  const generateCode = () => {
+    const lines = [];
+    lines.push("Armor:Add({");
+    lines.push(`  Name = "${name}",`);
+    lines.push("  Length = (99999 * 1),");
+    lines.push(`  Health = ${health},`);
+    lines.push(`  Armor = ${armor},`);
+    lines.push(`  Description = "${desc}",`);
+    lines.push(`  Model = "${model}",`);
+    lines.push(`  Entitie = "${entity}",`);
+    lines.push("  Price = 250000000000,");
+    lines.push("  OnGive = function(ply)");
+    lines.push(`    ply:SetArmor(${armor})`);
+    lines.push(`    ply:SetHealth(${health})`);
+    lines.push(`    ply:SetJumpPower(${jump})`);
+    lines.push(`    ply:SetRunSpeed(${speed})`);
+    Object.entries(powers).forEach(([k, v]) => {
+      if (v) lines.push(`    ply.${k === "Lifesteal" ? "CanLifesteal" : "Can" + k} = true`);
+    });
+    lines.push("  end,");
+    lines.push("  OnRemove = function(ply)");
+    lines.push("    ply:SetArmor(0)");
+    lines.push("    ply:SetHealth(100)");
+    lines.push("    ply:SetJumpPower(200)");
+    lines.push("  end,");
+    lines.push("})");
+    return lines.join("\n");
+  };
+
+  return (
+    <div>
+      <h1>🧪 GMod Suit Builder</h1>
+      <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Suit Name" />
+      <input value={entity} onChange={(e) => setEntity(e.target.value)} placeholder="Entity ID" />
+      <input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Description" />
+      <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="Model Path" />
+      <input type="number" value={health} onChange={(e) => setHealth(+e.target.value)} placeholder="Health" />
+      <input type="number" value={armor} onChange={(e) => setArmor(+e.target.value)} placeholder="Armor" />
+      <input type="number" value={speed} onChange={(e) => setSpeed(+e.target.value)} placeholder="Speed" />
+      <input type="number" value={jump} onChange={(e) => setJump(+e.target.value)} placeholder="Jump Power" />
+      {Object.keys(powers).map((key) => (
+        <label key={key}><input className="checkbox" type="checkbox" checked={powers[key]} onChange={() => togglePower(key)} /> {key}</label>
+      ))}
+      <h2>🧩 Generated Config</h2>
+      <pre className="output">{generateCode()}</pre>
+    </div>
+  );
+}
+
+ReactDOM.render(<SuitBuilder />, document.getElementById("root"));
+  </script>
+</body>
 </html>
