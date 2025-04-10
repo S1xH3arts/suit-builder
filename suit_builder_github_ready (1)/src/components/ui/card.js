@@ -1,0 +1,1 @@
+export const Card = ({ children }) => <div className='border rounded shadow'>{children}</div>;
