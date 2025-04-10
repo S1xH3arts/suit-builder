@@ -1,1 +1,0 @@
-export const Input = (props) => <input {...props} className='border p-2 w-full rounded' />;
